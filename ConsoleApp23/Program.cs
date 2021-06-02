@@ -3,96 +3,91 @@ using System.IO;
 using System.Threading;
 
 
-class Пример
+//class Program
+//{
+//    static AutoResetEvent waitEvent = new AutoResetEvent(true); // Переводим объект в сигнальное состояние в конструкторе.
+//    static int x;
+
+//    static void Main(string[] args)
+//    {
+//        for (int i = 0; i < 5; i++) // Пять итераций в которых будет запущено 5 потоков.
+//        {
+//            Thread newThread = new Thread(CountMethod); // Создаем обьект потока и передаем ему ссылку на метод.
+//            newThread.Name = "Поток №" + i.ToString();// Присваиваем имя каждому потоку.
+//            newThread.Start(); // Запускаем потоки.
+//        }
+
+//        Console.ReadLine();
+//    }
+//    public static void CountMethod()
+//    {
+//        waitEvent.WaitOne(); // Из метода, который выполняется в каждом потоке запускаем WaitOne, чтобы перевести потоки в состояние ожидания сигнального состояния. Теперь все потоки в состоянии ожидания.
+//        for (x = 1; x < 9; x++)
+//        {
+//            Console.WriteLine("{0}: {1}", Thread.CurrentThread.Name, x);
+//            Thread.Sleep(100);
+//        }
+//        waitEvent.Reset(); // Переводим объект в сигнальное состоянии, чтобы поток мог захватить ресурс.
+//    }
+//}
+
+
+
+
+
+
+
+
+public class AutoResetEventSample
 {
-
-    public static AutoResetEvent evWriter;
-    public static AutoResetEvent evReader;
-    public static string str = "";
-    public static string path = @"C:\Users\esteb\source\repos\ConsoleApp23\ConsoleApp23\bin\Debug\1.txt";
-    public static bool reading = false;
-
-    //Тело потока-писателя
-    public static void Писатель()
-    {
-        string stroka = "";
-        char[] symb;
-        while (reading)
-        {
-            // После вызова функции WaitForSingleObject
-            // поток-писатель приостанавливает свою работу
-            // до освобождения события evWriter.
-            // Затем, возобновляет работу, предварительно
-            // переведя событие evWriter в состояние– занято
-            evWriter.WaitOne();
-            if (str != null)
-            {
-                symb = str.ToCharArray();
-                foreach (char i in symb)
-                {
-
-                    stroka += char.ToUpper(i);
-
-                }
-                Console.WriteLine(stroka);
-                stroka = null;
-                str = null;
-            }
-            // Освобождение события evReader.
-            // После его освобождения проснется поток-читатель
-            evReader.Set();
-
-        }
-
-
-    }
-
-    //Тело потока-читателя
-    public static void Читатель()
-    {
-        reading = true;
-        StreamReader sr = new StreamReader(path);
-        while (!sr.EndOfStream)
-        {
-            //После вызова функции WaitForSingleObject
-            //поток-читатель приостанавливает свою работу
-            //до освобождения события evReader. Затем,
-            //возобновляет работу, предварительно переведя
-            //событие evReader в состояние– занято
-            evReader.WaitOne();
-            if (str == null)
-                str = sr.ReadLine();
-            // Освобождение события evWriter.
-            // После его освобождения проснется поток-писатель
-            evWriter.Set();
-        }
-
-        reading = false;
-        sr.Close();
-
-    }
+    private static AutoResetEvent autoReset = new AutoResetEvent(false);
 
 
     public static void Main()
     {
+        for (int i = 0; i < 5; i++)
+        {
 
-        // событие evWriter изначально создаётся в сигнальном состоянии
-        evWriter = new AutoResetEvent(true);
-        // событие evReader изначально создаётся в несигнальном состоянии
-        evReader = new AutoResetEvent(false);
+        new Thread(Worker1).Start();
+        new Thread(Worker2).Start();
+        new Thread(Worker3).Start();
+        new Thread(Worker4).Start();
+        autoReset.Set();
+            
+        Thread.Sleep(200);
+            Console.WriteLine('\t');
+        }
+        Console.WriteLine("Main thread reached to end.");
+        Console.ReadLine();
+    }
+  
 
-        Thread читатель = new Thread(Читатель);
-        Thread писатель = new Thread(Писатель);
-
-        читатель.Start();
-        писатель.Start();
-
-        evReader.Set();
-
-        // основной поток дожидается завершения работы
-        // читателя и писателя
-        читатель.Join();
-        писатель.Join();
-        Console.ReadKey();
+    public static void Worker1()
+    {
+        autoReset.WaitOne();
+        Console.WriteLine("Worker1 is running {0}", 1);
+        Thread.Sleep(20);
+        autoReset.Set();
+    }
+    public static void Worker2()
+    {
+        autoReset.WaitOne();
+        Console.WriteLine("Worker2 is running {0}", 2);
+            Thread.Sleep(20);
+        autoReset.Set();
+    }
+    public static void Worker3()
+    {
+        autoReset.WaitOne();
+        Console.WriteLine("Worker3 is running {0}", 3);
+        Thread.Sleep(20);
+        autoReset.Set();
+    }
+    public static void Worker4()
+    {
+        autoReset.WaitOne();
+        Console.WriteLine("Worker4 is running {0}", 4);
+        Thread.Sleep(20);
+        autoReset.Set();
     }
 }
